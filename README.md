@@ -20,12 +20,17 @@ docker compose up
 
 > So, this is admittedly not ideal but I think suffices here to demonstrate basic Django initialization, launching, running, etc. easily and simply without much configuration fuss. However, one must a bit patient for the entire sequence to successfully complete. Please review and tweak the `run.sh` Bash command to your liking to optimizing for your local hardware.
 
+Endpoints available after everything spins up:
 1. http://localhost:8000/
 1. http://localhost:8000/test
 1. GET http://localhost:8000/api/examples
 1. GET http://localhost:8000/api/subexamples
 1. GET http://localhost:8000/api/subexamples/disjoint?name=sub_example_one
+1. GET http://localhost:8000/api/examples/one?pk=3
+1. PUT `curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X PUT "http://localhost:8000/api/subexamples/update?sub_example_pk=1&example_pk=3" --insecure`
 1. POST `curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST "http://localhost:8000/api/examples/create" -d '{"name": "example"}' --insecure`
+1. POST `curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST "http://localhost:8000/api/subexamples/create" -d '{"name": "subexample"}' --insecure`
+1. DELETE `curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X DELETE "http://localhost:8000/api/examples/delete" -d '{"names_to_delete": ["example_one","example_two"]}' --insecure`
 
 ### Django Admin
 
@@ -42,10 +47,13 @@ Create Migrations:
 1. Moving `manage.py` out of the default `django-admin startproject djangoexample` (initialization) root directory.
 1. Uses modules (`__init__.py`) for better grouping and organization of default files, namespaces, etc. within the root directory. Remember that there are limits to this approach (`models.py` [remains reserved](https://docs.djangoproject.com/en/6.0/topics/db/models/) and cannot be replaced with `models/__init__.py`).
     * Make sure to double-check `imports` and paths! (Some frameworks now infer the file location.)
-1. Seed data is injected at web application initialization (in addition to `migrations`).
+1. Seed data is injected at web application initialization (in addition to `migrations`) using [Command](https://docs.djangoproject.com/en/6.0/howto/custom-management-commands/).
 1. Does not use [class-based generic views](https://docs.djangoproject.com/en/6.0/topics/class-based-views/generic-display/).
 1. Uses [`@cache_page`](https://docs.djangoproject.com/en/6.0/ref/utils/#django.utils.functional.cached_property).
 1. Uses `@cache_property`.
+    * Caches on first access (by type or all instances of a type, not by specific instance).
+    * Mutations are preserved.
+    * Regeneration.
 1. Regarding the **N+1 Problem**, this term is widely used. 
     * In Django this is usually the result of default **Lazy-Loading** (and generally that's true). `selected_related` for complex relationships (**Many-to-Many**, etc.)
     * In Java, ["Although this problem often is connected to lazy loading, it’s not always the case."](https://www.baeldung.com/spring-hibernate-n1-problem) - **Lazy-Loading** can solve certain really specific scenarios.
@@ -54,6 +62,12 @@ Create Migrations:
 1. [QueryDict](https://docs.djangoproject.com/en/6.0/ref/request-response/#django.http.QueryDict) for parsing HTTP Query Parameters.
 1. [Model Methods](https://docs.djangoproject.com/en/6.0/topics/db/models/#model-methods)
 1. `.filter().first()` vs. `.get()`.
+1. `asyncio` vs. `asgiref`:
+    * `asyncio` - **keyword** syntax from core Python, handles asynchronous contexts under the hood.
+    * `asgiref` - specific to Django/ORM, synchronous to asynchronous (and vice-versa) context switching, context preservation ([thread-local data](https://docs.python.org/3/library/threading.html#thread-local-data)), **wrapper** or **decorator**.
+    * `@async_to_sync()` - More powerful than `asyncio` alone. [Runs the async function in a new sub-thread](https://docs.djangoproject.com/en/6.0/topics/async/#async-to-sync), supports threadlocals and thread_sensitive (running all `thread_sensitive=True` on the same but new thread or force a new thread if `False`).
+1. Using `json.loads(serializers.serialize('json', scan))` and `JsonResponse(response_data, json_dumps_params={'indent': 4}, safe=False)` for pleasing JSON HTTP Responses.
+1. Confirming some basic `.exists()` and `is not None` comparisons.
 
 ## Resources and Links
 
@@ -72,3 +86,7 @@ Create Migrations:
 1. https://docs.djangoproject.com/en/6.0/ref/request-response/#django.http.QueryDict
 1. https://erdimollahseyin.medium.com/django-query-optimizations-how-to-make-your-app-faster-eb4b25877dce
 1. https://docs.djangoproject.com/en/6.0/topics/db/models/#model-methods
+1. https://engineering.kraken.tech/news/2026/01/12/using-django-async.html
+1. https://docs.djangoproject.com/en/6.0/topics/async/#async-to-sync
+1. https://docs.python.org/3/library/threading.html#thread-local-data
+1. https://docs.djangoproject.com/en/6.0/howto/custom-management-commands/

@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import index, all_sub_examples, all_examples, post_example, disjoint_self
+from .views import index, all_sub_examples, all_examples, post_example, disjoint_and_down_remove, delete_many, one_example, post_sub_example, put_sub_example
 from django.views import debug
 
 urlpatterns = [
@@ -29,7 +29,13 @@ urlpatterns = [
     path('test', index, name='index'),
 
     path('api/subexamples', all_sub_examples),
+    path('api/subexamples/update', put_sub_example),
+    path('api/subexamples/create', post_sub_example),
+    path('api/subexamples/disjoint', disjoint_and_down_remove),
+
     path('api/examples', all_examples),
+    path('api/examples/one', one_example),
     path('api/examples/create', post_example),
-    path('api/subexamples/disjoint', disjoint_self),
+    path('api/examples/delete', delete_many),
+    path('api/subexamples/disjoint', disjoint_and_down_remove),
 ]

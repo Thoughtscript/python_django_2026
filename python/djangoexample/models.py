@@ -12,7 +12,7 @@ class SubExample(models.Model):
 
     # Also a Property - "Model Method" vs "Table Manger Method"
     @cached_property
-    def disjoint_self(self):
+    def disjoint_and_down_remove(self):
         ## Muse use SubExample not self.objects.all or it converts to a Table Manager Method implicitly
         all_subexamples = SubExample.objects.all()
         all_subexamples.filter(name=self.name).delete()
