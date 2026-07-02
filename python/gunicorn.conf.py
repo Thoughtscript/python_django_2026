@@ -5,7 +5,7 @@ bind = "0.0.0.0:8000"
 workers = 4
 accesslog = "-"
 worker_class= "uvicorn_worker.UvicornWorker"
-asgi_loop = "auto"
 
-# To suppress 'ASGI 'lifespan' protocol appears unsupported.' messages
-asgi_lifespan="off"
+### Optimizations: https://gunicorn.org/asgi/#recommended-settings
+asgi_loop = "auto"
+asgi_lifespan="auto"

@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/badge/Python-3.12.3-yellow.svg)](https://www.python.org/downloads/) [![](https://img.shields.io/badge/Docker-blue.svg)](https://www.docker.com/) [![](https://img.shields.io/badge/MySQL-9.7.1-blue.svg)](https://dev.mysql.com/doc/refman/8.4/en/preface.html) [![](https://img.shields.io/badge/Django-6.0.6-green.svg)](https://www.djangoproject.com/) 
 
-Spent a couple hours refreshing/reviewing latest greatest Django in 2026.
+Spent a few hours refreshing/reviewing latest greatest Django in 2026.
 
 ## Comments
 
@@ -16,12 +16,15 @@ Spent a couple hours refreshing/reviewing latest greatest Django in 2026.
 docker compose up
 ```
 
-> For simplicity's sake, I've lept `sleep` commands within the [run.sh](./python/run.sh) executed on the `python` service start-run sequence. Such an approach is one of 2-3 that are often recommended in these scenarios. Why? Docker Compose healthchecks typically evaluate the state of the Container or general runtime (and not say the status of a Web Application running within such runtime), migrations vary a bit in terms of execution time, and lastly Docker Compose isn't typically used to deploy code to Production (only to run code locally on the same machine). So, this is admittedly not ideal but I think suffices here to demonstrate basic Django initialization, launching, running, etc. easily and simply without much configuration fuss. However, one must a bit patient for the entire sequence to successfully complete. Please review and tweak the `run.sh` Bash command to your liking to optimizing for your local hardware.
+> For simplicity's sake, I've left `sleep` commands within the [run.sh](./python/run.sh) executed on the `python` service start-run sequence. Such an approach is one of 2-3 that are often recommended in these scenarios. Why? Docker Compose healthchecks typically evaluate the state of the Container or general runtime (and not say the status of a Web Application running within such runtime), migrations vary a bit in terms of execution time, and lastly Docker Compose isn't typically used to deploy code to Production (only to run code locally on the same machine). 
+
+> So, this is admittedly not ideal but I think suffices here to demonstrate basic Django initialization, launching, running, etc. easily and simply without much configuration fuss. However, one must a bit patient for the entire sequence to successfully complete. Please review and tweak the `run.sh` Bash command to your liking to optimizing for your local hardware.
 
 1. http://localhost:8000/
 1. http://localhost:8000/test
 1. GET http://localhost:8000/api/examples
 1. GET http://localhost:8000/api/subexamples
+1. GET http://localhost:8000/api/subexamples/disjoint?name=sub_example_one
 1. POST `curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST "http://localhost:8000/api/examples/create" -d '{"name": "example"}' --insecure`
 
 ### Django Admin
@@ -39,6 +42,18 @@ Create Migrations:
 1. Moving `manage.py` out of the default `django-admin startproject djangoexample` (initialization) root directory.
 1. Uses modules (`__init__.py`) for better grouping and organization of default files, namespaces, etc. within the root directory. Remember that there are limits to this approach (`models.py` [remains reserved](https://docs.djangoproject.com/en/6.0/topics/db/models/) and cannot be replaced with `models/__init__.py`).
     * Make sure to double-check `imports` and paths! (Some frameworks now infer the file location.)
+1. Seed data is injected at web application initialization (in addition to `migrations`).
+1. Does not use [class-based generic views](https://docs.djangoproject.com/en/6.0/topics/class-based-views/generic-display/).
+1. Uses [`@cache_page`](https://docs.djangoproject.com/en/6.0/ref/utils/#django.utils.functional.cached_property).
+1. Uses `@cache_property`.
+1. Regarding the **N+1 Problem**, this term is widely used. 
+    * In Django this is usually the result of default **Lazy-Loading** (and generally that's true). `selected_related` for complex relationships (**Many-to-Many**, etc.)
+    * In Java, ["Although this problem often is connected to lazy loading, it’s not always the case."](https://www.baeldung.com/spring-hibernate-n1-problem) - **Lazy-Loading** can solve certain really specific scenarios.
+    * From core contributors to [Rails, Postgres](https://brandur.org/two-phase-render) - this problem is also not always solved the same way (**Eager-Loading**). In the example a **two-phase load and render** had to be implemented.
+    * But to be clear though, Django also [sometimes requires](https://blog.sentry.io/finding-and-fixing-django-n-1-problems/) using `prefetch_related` which is arguably not **Eager**.
+1. [QueryDict](https://docs.djangoproject.com/en/6.0/ref/request-response/#django.http.QueryDict) for parsing HTTP Query Parameters.
+1. [Model Methods](https://docs.djangoproject.com/en/6.0/topics/db/models/#model-methods)
+1. `.filter().first()` vs. `.get()`.
 
 ## Resources and Links
 
@@ -52,3 +67,8 @@ Create Migrations:
 1. https://oneuptime.com/blog/post/2026-02-03-python-uvicorn-production/view
 1. https://gunicorn.org/configure/
 1. https://gunicorn.org/reference/settings/
+1. https://docs.djangoproject.com/en/6.0/topics/class-based-views/generic-display/
+1. https://docs.djangoproject.com/en/6.0/ref/request-response/
+1. https://docs.djangoproject.com/en/6.0/ref/request-response/#django.http.QueryDict
+1. https://erdimollahseyin.medium.com/django-query-optimizations-how-to-make-your-app-faster-eb4b25877dce
+1. https://docs.djangoproject.com/en/6.0/topics/db/models/#model-methods
