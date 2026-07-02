@@ -1,0 +1,54 @@
+# python_django_2026
+
+[![](https://img.shields.io/badge/Python-3.12.3-yellow.svg)](https://www.python.org/downloads/) [![](https://img.shields.io/badge/Docker-blue.svg)](https://www.docker.com/) [![](https://img.shields.io/badge/MySQL-9.7.1-blue.svg)](https://dev.mysql.com/doc/refman/8.4/en/preface.html) [![](https://img.shields.io/badge/Django-6.0.6-green.svg)](https://www.djangoproject.com/) 
+
+Spent a couple hours refreshing/reviewing latest greatest Django in 2026.
+
+## Comments
+
+1. Adding some recent changes to an [existing barebones example](https://github.com/Thoughtscript/python_django_2024).
+1. Incorporating and retaining a handful of overlooked, lesser-known, interesting, or advanced techniques from the former (or `6.x` documentation, dev blogs, etc.).
+1. Curiosity about newer features.
+
+## Use and Setup
+
+```bash
+docker compose up
+```
+
+> For simplicity's sake, I've lept `sleep` commands within the [run.sh](./python/run.sh) executed on the `python` service start-run sequence. Such an approach is one of 2-3 that are often recommended in these scenarios. Why? Docker Compose healthchecks typically evaluate the state of the Container or general runtime (and not say the status of a Web Application running within such runtime), migrations vary a bit in terms of execution time, and lastly Docker Compose isn't typically used to deploy code to Production (only to run code locally on the same machine). So, this is admittedly not ideal but I think suffices here to demonstrate basic Django initialization, launching, running, etc. easily and simply without much configuration fuss. However, one must a bit patient for the entire sequence to successfully complete. Please review and tweak the `run.sh` Bash command to your liking to optimizing for your local hardware.
+
+1. http://localhost:8000/
+1. http://localhost:8000/test
+1. GET http://localhost:8000/api/examples
+1. GET http://localhost:8000/api/subexamples
+1. POST `curl -i -H "Accept: application/json" -H "Content-Type: application/json" -X POST "http://localhost:8000/api/examples/create" -d '{"name": "example"}' --insecure`
+
+### Django Admin
+
+Create Migrations:
+1. `exec` into the Docker Container Interactive Terminal.
+1. Due to the `dockerfile` configuration, it should drop you into the correct directory. Then run: `≈`. Django will automatically detect and pick up Models that have been added and create the necessary scripts to initialize the database.
+
+## Techniques and Interesting Topics
+
+1. Many [examples on the internet](https://adamj.eu/tech/2020/02/04/how-to-use-pymysql-with-django/) used to demonstrate the use of `Django` with `PyMySQL` but this is unnecessary for basic connections. It can be [configured without additional dependencies](./python/djangoexample/config/settings.py) (thereby reducing complexity, attack surface, configuration, distribution size, etc.) for examples such as this.
+1. This uses [barebones configurations](./docker-compose.yml) for MySQL (e.g. - `MYSQL_ALLOW_EMPTY_PASSWORD`) which is useful for local, scratch-style, databases. This is using the official MySQL `environment` (ENV VAR) configuration and more closely corresponds to the actual settings one would configure in real-world professional scenarios (although one shouldn't use that setting Production obviously).
+1. This uses `asgi` and `uvicorn-worker` for Asychronous support (an ongoing target in the [core Django specification](https://github.com/django/deps/blob/main/accepted/0009-async.rst#async-wrapper)). It also uses `gunicorn` to [manage](./python/run.sh) the Asynchronous `uvicorn` [workers](./python/gunicorn.conf.py) now. This is still the default configuration combination for Production deployments (combining `asgi` support with Worker Management).
+1. A mostly Headless REST API with common CRUD operations. Why? It's standard-practice to seperate concerns by deploying compiled/transpiled/bundled/minified client-side sourcecode through Content Delivery Networks (since these are low latency, serve quickly through aggressive localized caching, reduce resource overhead from serving static content, reduce OWASP security concerns like [file directory traversal](https://owasp.org/www-community/attacks/Path_Traversal) vulnerabilities, etc.). I'vgunicoe left a View or two in here just for demostration purposes. For full-fledged React examples, please see my other demos.
+1. Moving `manage.py` out of the default `django-admin startproject djangoexample` (initialization) root directory.
+1. Uses modules (`__init__.py`) for better grouping and organization of default files, namespaces, etc. within the root directory. Remember that there are limits to this approach (`models.py` [remains reserved](https://docs.djangoproject.com/en/6.0/topics/db/models/) and cannot be replaced with `models/__init__.py`).
+    * Make sure to double-check `imports` and paths! (Some frameworks now infer the file location.)
+
+## Resources and Links
+
+1. https://github.com/Thoughtscript/python_django_2024
+1. https://docs.djangoproject.com/en/6.0/releases/
+1. https://docs.djangoproject.com/en/6.0/
+1. https://docs.djangoproject.com/en/6.0/ref/settings/#databases
+1. https://docs.djangoproject.com/en/6.0/internals/deprecation/
+1. https://uvicorn.dev/settings/
+1. https://medium.com/@toimrank/uvicorn-for-fastapi-00a1ddb5ca4d
+1. https://oneuptime.com/blog/post/2026-02-03-python-uvicorn-production/view
+1. https://gunicorn.org/configure/
+1. https://gunicorn.org/reference/settings/

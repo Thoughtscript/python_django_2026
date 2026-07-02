@@ -1,0 +1,31 @@
+services:
+  mysql:
+    build:
+      context: ./mysql
+      dockerfile: dockerfile
+    ports:
+      - '3306:3306'
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_USER=example
+      - MYSQL_PASSWORD=example
+      - MYSQL_DATABASE=example
+      - MYSQL_AUTHENTICATION_PLUGIN=mysql_native_password
+    networks:
+      - testnet
+
+  django:
+    build:
+      context: ./python
+      dockerfile: dockerfile
+    ports:
+      - '8000:8000'
+    depends_on:
+      - mysql
+    networks:
+      - testnet
+    restart: unless-stopped
+
+networks:
+  testnet:
+    driver: bridge
