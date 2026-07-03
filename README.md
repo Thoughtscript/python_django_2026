@@ -77,6 +77,27 @@ Create Migrations:
     * Test Databses configured in [settings.py](./python/djangoexample/config/settings.py).
 1. Private methods still don't exist.
 
+## Screenshots
+
+1. What one should see on successful start:
+    ![](./_screenshots/app-init.png)
+
+    ![](./_screenshots/docker-compose.png)
+
+1. API REST Responses - Browser:
+
+    ![](./_screenshots/api-rest-response.png)
+
+1. API REST Responses - CLI:
+
+    ![](./_screenshots/curl-post.png)
+
+    ![](./_screenshots/signals.png)
+
+1. Docker Exec Interactive Terminal Tests:
+
+    ![](./_screenshots/exec-it-test.png)
+
 ## Resources and Links
 
 1. https://github.com/Thoughtscript/python_django_2024
