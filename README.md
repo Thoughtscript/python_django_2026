@@ -36,14 +36,15 @@ Endpoints available after everything spins up:
 
 Create Migrations:
 1. `exec` into the Docker Container Interactive Terminal.
-1. Due to the `dockerfile` configuration, it should drop you into the correct directory. Then run: `≈`. Django will automatically detect and pick up Models that have been added and create the necessary scripts to initialize the database.
+1. Due to the `dockerfile` configuration, it should drop you into the correct directory. Then run: `python manage.py makemigrations`. Django will automatically detect and pick up Models that have been added and create the necessary scripts to initialize the database.
+1. For sample Integration and Unit Tests: `python manage.py test` (and running the above as barebones acceptance/integration tests).
 
 ## Techniques and Interesting Topics
 
 1. Many [examples on the internet](https://adamj.eu/tech/2020/02/04/how-to-use-pymysql-with-django/) used to demonstrate the use of `Django` with `PyMySQL` but this is unnecessary for basic connections. It can be [configured without additional dependencies](./python/djangoexample/config/settings.py) (thereby reducing complexity, attack surface, configuration, distribution size, etc.) for examples such as this.
 1. This uses [barebones configurations](./docker-compose.yml) for MySQL (e.g. - `MYSQL_ALLOW_EMPTY_PASSWORD`) which is useful for local, scratch-style, databases. This is using the official MySQL `environment` (ENV VAR) configuration and more closely corresponds to the actual settings one would configure in real-world professional scenarios (although one shouldn't use that setting Production obviously).
 1. This uses `asgi` and `uvicorn-worker` for Asychronous support (an ongoing target in the [core Django specification](https://github.com/django/deps/blob/main/accepted/0009-async.rst#async-wrapper)). It also uses `gunicorn` to [manage](./python/run.sh) the Asynchronous `uvicorn` [workers](./python/gunicorn.conf.py) now. This is still the default configuration combination for Production deployments (combining `asgi` support with Worker Management).
-1. A mostly Headless REST API with common CRUD operations. Why? It's standard-practice to seperate concerns by deploying compiled/transpiled/bundled/minified client-side sourcecode through Content Delivery Networks (since these are low latency, serve quickly through aggressive localized caching, reduce resource overhead from serving static content, reduce OWASP security concerns like [file directory traversal](https://owasp.org/www-community/attacks/Path_Traversal) vulnerabilities, etc.). I'vgunicoe left a View or two in here just for demostration purposes. For full-fledged React examples, please see my other demos.
+1. A mostly Headless REST API with common CRUD operations. Why? It's standard-practice to seperate concerns by deploying compiled/transpiled/bundled/minified client-side sourcecode through Content Delivery Networks (since these are low latency, serve quickly through aggressive localized caching, reduce resource overhead from serving static content, reduce OWASP security concerns like [file directory traversal](https://owasp.org/www-community/attacks/Path_Traversal) vulnerabilities, etc.). I've left a View or two in here just for demostration purposes. For full-fledged React examples, please see my other demos.
 1. Moving `manage.py` out of the default `django-admin startproject djangoexample` (initialization) root directory.
 1. Uses modules (`__init__.py`) for better grouping and organization of default files, namespaces, etc. within the root directory. Remember that there are limits to this approach (`models.py` [remains reserved](https://docs.djangoproject.com/en/6.0/topics/db/models/) and cannot be replaced with `models/__init__.py`).
     * Make sure to double-check `imports` and paths! (Some frameworks now infer the file location.)
@@ -67,7 +68,14 @@ Create Migrations:
     * `asgiref` - specific to Django/ORM, synchronous to asynchronous (and vice-versa) context switching, context preservation ([thread-local data](https://docs.python.org/3/library/threading.html#thread-local-data)), **wrapper** or **decorator**.
     * `@async_to_sync()` - More powerful than `asyncio` alone. [Runs the async function in a new sub-thread](https://docs.djangoproject.com/en/6.0/topics/async/#async-to-sync), supports threadlocals and thread_sensitive (running all `thread_sensitive=True` on the same but new thread or force a new thread if `False`).
 1. Using `json.loads(serializers.serialize('json', scan))` and `JsonResponse(response_data, json_dumps_params={'indent': 4}, safe=False)` for pleasing JSON HTTP Responses.
+    * Best practices around: `JsonResponse`.
 1. Confirming some basic `.exists()` and `is not None` comparisons.
+1. **Signals** like `pre_save`.
+1. Wiring up **Signals** using `AppConfig` (and replacing the prior configuration in [settings.py](./python/djangoexample/config/settings.py)).
+1. Django [testing](https://docs.djangoproject.com/en/6.0/topics/testing/overview/) through Django's [unittest](https://docs.python.org/3/library/unittest.html) `TestCase`. 
+    * Unit Tests must still be prepended with `test_`.
+    * Test Databses configured in [settings.py](./python/djangoexample/config/settings.py).
+1. Private methods still don't exist.
 
 ## Resources and Links
 
@@ -90,3 +98,6 @@ Create Migrations:
 1. https://docs.djangoproject.com/en/6.0/topics/async/#async-to-sync
 1. https://docs.python.org/3/library/threading.html#thread-local-data
 1. https://docs.djangoproject.com/en/6.0/howto/custom-management-commands/
+1. https://docs.djangoproject.com/en/6.0/ref/signals/
+1. https://docs.djangoproject.com/en/6.0/topics/testing/overview/
+1. https://docs.python.org/3/library/unittest.html

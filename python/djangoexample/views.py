@@ -8,6 +8,13 @@ from django.core import serializers
 import asyncio
 import json
 
+# Still no private methods
+## This is private by convention
+def _make_json_response(data, status_code):
+    # Allows data structures beyond Dicts to be returned as JSON
+    ## This is status not status_code
+    return JsonResponse(data, status=status_code, json_dumps_params={'indent': 4}, safe=False)
+
 @cache_page(3600)
 def index(request):
     return render(request, 'index.html', {})
@@ -31,34 +38,24 @@ async def one_example(request):
 
             example = await Example.objects.aget(pk=pk_query_param)
             # if not found will throw
-            response_data['data'] = { "pk": str(example.id), "name": example.name }
-            response_data['status'] = 200
-
+            
         except Exception as ex:
             print(ex)
-            response_data['data'] = "Error Encountered"
-            response_data['status'] = 500
+            return _make_json_response("Error Encountered", 500)
 
     else:
-        response_data['data'] = "Wrong Request Method Sent!"
-        response_data['status'] = 401
+        return _make_json_response("Wrong Request Method Sent", 401)
 
-    # Allows data structures beyond Dicts to be returned as JSON
-    return JsonResponse(response_data, json_dumps_params={'indent': 4}, safe=False)
+    return _make_json_response({ "pk": example.id, "name": example.name }, 200)
 
 # synchronous
 def all_examples(request):
     response_data = {}
     if request.method == "GET":
         scan = Example.objects.all()
-        response_data['data'] = json.loads(serializers.serialize('json', scan))
-        response_data['status'] = 200
+        return _make_json_response(json.loads(serializers.serialize('json', scan)), 200)
 
-    else:
-        response_data['data'] = "Wrong Request Method Sent!"
-        response_data['status'] = 401
-
-    return JsonResponse(response_data, json_dumps_params={'indent': 4}, safe=False)
+    return _make_json_response("Wrong Request Method Sent", 401)
 
 # async
 async def all_sub_examples(request):
@@ -68,14 +65,9 @@ async def all_sub_examples(request):
         ## lazy - ensure necessary complex relationships are 'prefetch_related'
         ## or 'selected_related'
         scan = [sub_example async for sub_example in SubExample.objects.all()]
-        response_data['data'] = json.loads(serializers.serialize('json', scan))
-        response_data['status'] = 200
+        return _make_json_response(json.loads(serializers.serialize('json', scan)), 200)
 
-    else:
-        response_data['data'] = "Wrong Request Method Sent!"
-        response_data['status'] = 401
-
-    return JsonResponse(response_data, json_dumps_params={'indent': 4}, safe=False)
+    return _make_json_response("Wrong Request Method Sent", 401)
 
 # caches on first access
 ## each subsequent request will remove if in cache and retrieve
@@ -99,23 +91,16 @@ def disjoint_and_down_remove(request):
                     del sub_example.disjoint_and_down_remove
                     disjoint_result = sub_example.disjoint_and_down_remove
 
-                response_data['data'] = json.loads(serializers.serialize('json', disjoint_result))
-                response_data['status'] = 200
+                return _make_json_response(json.loads(serializers.serialize('json', disjoint_result)), 200)
 
             else:
-                response_data['data'] = "Item Not Found!"
-                response_data['status'] = 400
+                return _make_json_response("Item Not Found!", 400)
         
         except Exception as ex:
             print(ex)
-            response_data['data'] = "Error Encountered"
-            response_data['status'] = 500
+            return _make_json_response("Error Encountered", 500)
 
-    else:
-        response_data['data'] = "Wrong Request Method Sent!"
-        response_data['status'] = 401
-
-    return JsonResponse(response_data, json_dumps_params={'indent': 4}, safe=False)
+    return _make_json_response("Wrong Request Method Sent", 401)
 
 @csrf_exempt
 # Just for testing
@@ -128,14 +113,9 @@ def post_example(request):
         example.name = json_body.get("name")
         example.save()
 
-        response_data['data'] = { "pk": str(example.id), "name": example.name }
-        response_data['status'] = 201
+        return _make_json_response({ "pk": example.id, "name": example.name }, 201)
 
-    else:
-        response_data['data'] = "Wrong Request Method Sent!"
-        response_data['status'] = 401
-
-    return JsonResponse(response_data, json_dumps_params={'indent': 4}, safe=False)
+    return _make_json_response("Wrong Request Method Sent", 401)
 
 
 @csrf_exempt
@@ -155,19 +135,13 @@ async def put_sub_example(request):
             sub_example.example = example
             await sub_example.asave()
 
-            response_data['data'] = { "pk": str(sub_example.id), "name": sub_example.name, "example": { "pk": str(example.id), "name": example.name } }
-            response_data['status'] = 201
+            return _make_json_response({ "pk": sub_example.id, "name": sub_example.name, "example": { "pk": example.id, "name": example.name } }, 201)
 
         except Exception as ex:
             print(ex)
-            response_data['data'] = "Error Encountered"
-            response_data['status'] = 500
+            return _make_json_response("Error Encountered", 500)
 
-    else:
-        response_data['data'] = "Wrong Request Method Sent!"
-        response_data['status'] = 401
-
-    return JsonResponse(response_data, json_dumps_params={'indent': 4}, safe=False)
+    return _make_json_response("Wrong Request Method Sent", 401)
 
 # async
 @csrf_exempt
@@ -181,14 +155,9 @@ async def post_sub_example(request):
         subexample.name = json_body.get("name")
         await subexample.asave()
 
-        response_data['data'] = { "pk": str(subexample.id), "name": subexample.name }
-        response_data['status'] = 201
+        return _make_json_response({ "pk": subexample.id, "name": subexample.name }, 201)
 
-    else:
-        response_data['data'] = "Wrong Request Method Sent!"
-        response_data['status'] = 401
-
-    return JsonResponse(response_data, json_dumps_params={'indent': 4}, safe=False)
+    return _make_json_response("Wrong Request Method Sent", 401)
 
 @csrf_exempt
 # Just for testing
@@ -199,16 +168,11 @@ async def delete_many(request):
             json_body = json.loads(request.body)
             to_delete = json_body.get('names_to_delete', [])
             count, _ = await Example.objects.filter(name__in=to_delete).adelete()
-            response_data['data'] = { "deleted": str(count) }
-            response_data['status'] = 200
+    
+            return _make_json_response({ "deleted": str(count) }, 200)
 
         except Exception as ex:
             print(ex)
-            response_data['data'] = "Error Encountered"
-            response_data['status'] = 500
+            return _make_json_response("Error Encountered", 500)
 
-    else:
-        response_data['data'] = "Wrong Request Method Sent!"
-        response_data['status'] = 401
-
-    return JsonResponse(response_data, json_dumps_params={'indent': 4}, safe=False)
+    return _make_json_response("Wrong Request Method Sent", 401)
