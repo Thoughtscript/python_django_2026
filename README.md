@@ -23,7 +23,7 @@ docker compose up
 Endpoints available after everything spins up:
 1. http://localhost:8000/
 1. http://localhost:8000/test
-1. GET http://localhost:8000/api/examples
+1. GET http://localhost:8000/api/examples?page=1
 1. GET http://localhost:8000/api/subexamples
 1. GET http://localhost:8000/api/subexamples/disjoint?name=sub_example_one
 1. GET http://localhost:8000/api/examples/one?pk=3
@@ -76,6 +76,8 @@ Create Migrations:
     * Unit Tests must still be prepended with `test_`.
     * Test Databses configured in [settings.py](./python/djangoexample/config/settings.py).
 1. Private methods still don't exist.
+1. [Pagination](https://docs.djangoproject.com/en/6.0/topics/pagination/)
+1. [Tasks](https://docs.djangoproject.com/en/6.0/topics/tasks/) - must supply `from django.tasks import default_task_backend` or import will fail.
 
 ## Screenshots
 
@@ -122,3 +124,8 @@ Create Migrations:
 1. https://docs.djangoproject.com/en/6.0/ref/signals/
 1. https://docs.djangoproject.com/en/6.0/topics/testing/overview/
 1. https://docs.python.org/3/library/unittest.html
+1. https://docs.djangoproject.com/en/6.0/topics/performance/
+1. https://docs.djangoproject.com/en/6.0/topics/pagination/
+1. https://docs.djangoproject.com/en/6.0/topics/tasks/
+1. https://dev.to/engrmark/django-6-released-heres-how-to-use-its-game-changing-task-feature-5f5e
+1. https://github.com/django/deps/blob/main/accepted/0009-async.rst#async-wrapper
